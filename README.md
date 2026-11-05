@@ -75,13 +75,20 @@ npm run check      # lint, types, unit tests, production build
 │  │  ├─ betaflight/            versions.ts, schema/*.json (generated), compile.ts, simplified.ts,
 │  │  │                         cli.ts, dump.ts
 │  │  ├─ inav/                  experimental, rates only
+│  │  ├─ flownRates.ts          the rates exactly as flown (stored integers, rate limit, deadbands)
 │  │  └─ planned.ts             EmuFlight, KISS/Ultra
 │  ├─ transport/                talking to a flight controller
 │  │  ├─ types.ts               SerialTransport interface
 │  │  ├─ webSerial.ts           browser implementation
 │  │  ├─ cliSession.ts          enter CLI, send/await prompt, errors, version check, save
 │  │  └─ simulatedFc.ts         a Betaflight CLI simulator (tests and demo)
-│  └─ ui/                       React: App, wizard steps, panels, controls, state reducer
+│  ├─ sim/                      rate simulator (no React)
+│  │  ├─ rcPipeline.ts          stick → rcCommandf (deadband) → setpoint, as Betaflight does it
+│  │  ├─ kinematics.ts          quaternion integration of body rates over dt
+│  │  ├─ input/gamepad.ts       Gamepad API: RC radios and pads, detect, calibrate, per-device mapping
+│  │  ├─ input/keyboard.ts      arrow keys / A-D with an analog-style ramp
+│  │  └─ scene.ts               three.js quad, chase and FPV cameras (lazy-loaded)
+│  └─ ui/                       React: App, wizard steps, panels, controls, state reducer, sim/
 ├─ scripts/extract-betaflight-schema.mjs   generates schema/bf-<version>.json from firmware source
 ├─ tools/push_cli.py            pyserial pusher (+ test_push_cli.py)
 └─ docs/TUNING_MODEL.md         the model, its formulas and its calibration
@@ -89,6 +96,31 @@ npm run check      # lint, types, unit tests, production build
 
 Data flow: `wizard answers → core.generateTune() → CanonicalTune → adapter.compile() →
 CompiledConfig (validated params) → adapter.renderCli() → script → copy / download / pushScript()`.
+
+## Rate simulator
+
+Step 3 (*Feel*) has a 3D quad you can fly with the rates being designed, before writing anything.
+It rotates only: no gravity, wind or collisions. What it shows is the **setpoint**, the rotation
+Betaflight commands for your stick position, so a full-stick flip takes exactly `360 / max rate`.
+
+- **Input**: any USB radio in joystick (HID) mode through the Gamepad API (EdgeTX/OpenTX on
+  Radiomaster, Jumper, FrSky; FreedomTX/EdgeTX on TBS), or a console gamepad. Default mapping AETR
+  for radios and Mode 2 for standard pads; *Radio setup* detects each axis and its direction from a
+  single stick push, calibrates centers and end points, and remembers the result per device. Without
+  a radio: on-screen sticks (mouse or two thumbs on a phone) or arrow keys + A/D.
+- **Math, per frame**: stick → `rcCommandf` with Betaflight's deadband handling
+  (`sign · max(0, |d| − deadband) / (500 − deadband)`, the same in 4.4 inline code and 2025.12+
+  `fapplyDeadband`) → the firmware rate formula on the *stored integers* of the script → the
+  `*_rate_limit` clamp. Deadbands and rate limits come from expert edits or an imported `diff all`.
+- **Kinematics**: the setpoints are body rates, integrated as an exact rotation over the frame time
+  (`q ← q ⊗ exp(ω·dt/2)`), so the motion is frame-rate independent and has no gimbal lock. Frame
+  time is capped at 50 ms so a background tab never flings the model.
+- **View**: chase camera or FPV camera with adjustable uptilt (style default 20°/30°/40°), level
+  button (R, or double-click), full screen. Three.js loads only when the simulator is opened
+  (≈ 140 kB gzipped); the frame loop runs outside React and stops while the view is off screen.
+
+Not modelled on purpose: PID tracking lag, RC smoothing and feedforward. The model follows the
+setpoint perfectly, which is the "stick feel" of the rates themselves.
 
 ## Accuracy: what is checked against the firmware
 

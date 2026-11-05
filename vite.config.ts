@@ -8,6 +8,8 @@ export default defineConfig({
   plugins: [react()],
   build: {
     target: 'es2022',
+    // The rate simulator chunk (three.js, ~140 kB gzipped) is lazy-loaded when the simulator opens.
+    chunkSizeWarningLimit: 600,
   },
   server: {
     host: true,

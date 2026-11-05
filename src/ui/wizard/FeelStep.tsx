@@ -1,8 +1,60 @@
-// Step 3: the feel. Rate sliders always; tune sliders when PIDs are generated.
-import { AXES, type Axis, type RateCurve } from '../../core/types';
+// Step 3: the feel. Rate simulator and rate sliders always; tune sliders when PIDs are generated.
+import { lazy, Suspense, useMemo, useState } from 'react';
+import { AXES, type Axis, type FlightStyle, type RateCurve } from '../../core/types';
+import { deadbandsFor, flownRates } from '../../firmware/flownRates';
 import { IntentSlider, Notice, NumberInput } from '../components/controls';
 import { HeatMeter } from '../panels/LivePreview';
 import type { StepProps } from './types';
+
+// Three.js is only downloaded when the simulator is opened.
+const SimulatorPanel = lazy(() => import('../sim/SimulatorPanel'));
+
+const SIM_OPEN_KEY = 'tuneforge:sim-open';
+/** Typical FPV camera uptilt for each style, degrees. */
+const UPTILT: Record<FlightStyle, number> = { freestyle: 30, cinematic: 20, racing: 40 };
+
+function RateSimulator({ state, tune, config }: StepProps) {
+  const [open, setOpen] = useState(() => {
+    try {
+      return localStorage.getItem(SIM_OPEN_KEY) === '1';
+    } catch {
+      return false;
+    }
+  });
+  const toggle = (next: boolean) => {
+    setOpen(next);
+    try {
+      localStorage.setItem(SIM_OPEN_KEY, next ? '1' : '0');
+    } catch {
+      // Not remembered.
+    }
+  };
+  // The exact rates the script writes (after expert edits), and the stick deadbands.
+  const rates = useMemo(() => flownRates(tune, config), [tune, config]);
+  const deadbands = useMemo(() => deadbandsFor(config, state.imported), [config, state.imported]);
+  return (
+    <div className="sim-card">
+      <div className="row" style={{ justifyContent: 'space-between' }}>
+        <div>
+          <h3 style={{ margin: 0 }}>Feel them before you fly</h3>
+          <p className="hint" style={{ margin: '2px 0 0' }}>
+            A 3D quad that rotates exactly as Betaflight would command it with these rates. Plug in your radio (USB joystick mode), or use the on-screen sticks.
+          </p>
+        </div>
+        <button type="button" className={`btn ${open ? '' : 'primary'}`} onClick={() => toggle(!open)} aria-expanded={open}>
+          {open ? 'Close simulator' : 'Open rate simulator'}
+        </button>
+      </div>
+      {open && (
+        <div style={{ marginTop: 14 }}>
+          <Suspense fallback={<p className="hint">Loading the 3D view…</p>}>
+            <SimulatorPanel rates={rates} deadbands={deadbands} ducted={state.craft.frame === 'ducted'} defaultUptilt={UPTILT[state.style]} />
+          </Suspense>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function RateEditor({ state, dispatch, tune }: StepProps) {
   const rates = tune.rates;
@@ -64,7 +116,9 @@ export function FeelStep(props: StepProps) {
       <h2 id="feel-title" tabIndex={-1}>Dial in the feel</h2>
       <p className="lede">Move the sliders and watch the curve and gains update. Double-click a slider to center it.</p>
 
-      <h3>Stick feel (rates)</h3>
+      <RateSimulator {...props} />
+
+      <h3 style={{ marginTop: 24 }}>Stick feel (rates)</h3>
       <IntentSlider label="Rotation speed" left="Calm" right="Fast flips" value={state.rateFeel.speed} onChange={(value) => dispatch({ type: 'rateFeel', key: 'speed', value })} readout={`${Math.round(roll.max)}°/s max`} />
       <IntentSlider label="Center stick" left="Gentle" right="Direct" value={state.rateFeel.center} onChange={(value) => dispatch({ type: 'rateFeel', key: 'center', value })} readout={`${Math.round(roll.center)}°/s center`} />
       <IntentSlider label="Curve" left="Linear" right="Strong expo" value={state.rateFeel.curve} onChange={(value) => dispatch({ type: 'rateFeel', key: 'curve', value })} readout={`expo ${roll.expo.toFixed(2)}`} />

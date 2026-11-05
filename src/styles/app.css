@@ -867,3 +867,241 @@ details > summary {
   clip: rect(0, 0, 0, 0);
   border: 0;
 }
+
+/* ---- Rate simulator -------------------------------------------------------------------- */
+.sim-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  padding: 14px;
+  margin-bottom: 8px;
+}
+.sim-view {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  width: 100%;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: #8fb9e3;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.sim-view:fullscreen {
+  aspect-ratio: auto;
+  border-radius: 0;
+}
+.sim-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.sim-error {
+  position: absolute;
+  inset: auto 12px 50% 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgb(0 0 0 / 60%);
+  color: #fff;
+  font-size: 14px;
+  text-align: center;
+}
+.sim-hud {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgb(10 15 22 / 62%);
+  color: #f1f5f9;
+  font: 12px/1.6 var(--mono);
+  pointer-events: none;
+  min-width: 230px;
+}
+.sim-hud-row {
+  display: grid;
+  grid-template-columns: 44px 44px 1fr 70px;
+  gap: 6px;
+  align-items: center;
+}
+.sim-hud-axis {
+  text-transform: uppercase;
+  color: #9fb3c8;
+  letter-spacing: 0.04em;
+}
+.sim-hud-rate {
+  text-align: right;
+  color: #ffd8bf;
+}
+.sim-bar {
+  position: relative;
+  height: 6px;
+  border-radius: 3px;
+  background: rgb(255 255 255 / 18%);
+}
+.sim-bar::after {
+  content: '';
+  position: absolute;
+  left: calc(50% - 0.5px);
+  top: -2px;
+  width: 1px;
+  height: 10px;
+  background: rgb(255 255 255 / 45%);
+}
+.sim-bar i {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  border-radius: 3px;
+  background: #ff7a33;
+  left: 50%;
+  width: 0;
+}
+.sim-hud-input {
+  color: #9fb3c8;
+  margin-top: 2px;
+  max-width: 260px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sim-toolbar {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.sim-seg {
+  display: inline-flex;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 25%);
+}
+.sim-seg button,
+.sim-button {
+  border: 0;
+  background: rgb(10 15 22 / 62%);
+  color: #f1f5f9;
+  padding: 6px 10px;
+  font-size: 13px;
+  cursor: pointer;
+  min-height: 32px;
+}
+.sim-button {
+  border-radius: 8px;
+  border: 1px solid rgb(255 255 255 / 25%);
+}
+.sim-seg button[aria-checked='true'] {
+  background: #ff7a33;
+  color: #1a0d05;
+  font-weight: 650;
+}
+.sim-pad {
+  position: absolute;
+  bottom: 12px;
+  width: 104px;
+  height: 104px;
+  border-radius: 14px;
+  background: rgb(10 15 22 / 30%);
+  border: 1px solid rgb(255 255 255 / 35%);
+  touch-action: none;
+  cursor: grab;
+}
+.sim-pad::before,
+.sim-pad::after {
+  content: '';
+  position: absolute;
+  background: rgb(255 255 255 / 30%);
+}
+.sim-pad::before {
+  left: 50%;
+  top: 10%;
+  bottom: 10%;
+  width: 1px;
+}
+.sim-pad::after {
+  top: 50%;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+}
+.sim-pad.left {
+  left: 12px;
+}
+.sim-pad.right {
+  right: 12px;
+}
+.sim-knob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #ff7a33;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 35%);
+  transform: translate(-50%, -50%);
+  z-index: 1;
+}
+.sim-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  align-items: center;
+  margin-top: 12px;
+}
+.sim-uptilt input {
+  width: 140px;
+}
+.sim-setup {
+  margin-top: 8px;
+}
+.radio-setup {
+  margin-top: 10px;
+}
+.raw-axes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 4px 14px;
+}
+.raw-axis {
+  display: grid;
+  grid-template-columns: 16px 1fr 40px;
+  gap: 6px;
+  align-items: center;
+  font-size: 12px;
+}
+.raw-track {
+  position: relative;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--border);
+}
+.raw-fill {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--accent);
+}
+@media (max-width: 640px) {
+  .sim-view {
+    aspect-ratio: 4 / 3;
+  }
+  .sim-hud {
+    min-width: 0;
+    font-size: 11px;
+  }
+  .sim-hud-row {
+    grid-template-columns: 38px 40px 1fr 62px;
+  }
+  .sim-pad {
+    width: 96px;
+    height: 96px;
+  }
+}

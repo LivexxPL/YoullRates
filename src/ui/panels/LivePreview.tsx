@@ -1,20 +1,12 @@
 // The always-visible side panel: rate curves as the firmware will run them, the craft estimate,
 // the gains being written, motor heat risk and warnings.
-import { canonicalRate } from '../../core/rates/fit';
-import { evaluateRate, RATE_MODELS } from '../../core/rates/models';
 import type { CanonicalTune } from '../../core/tuning/engine';
 import type { HeatRisk } from '../../core/tuning/filters';
 import { AXES, type Axis } from '../../core/types';
+import { flownRate } from '../../firmware/flownRates';
 import type { CompiledConfig, FirmwareAdapter } from '../../firmware/types';
 import { Notice } from '../components/controls';
 import { RateChart, type CurveSeries } from '../components/RateChart';
-
-/** The curve the flight controller will actually fly: the compiled integers through the firmware formula. */
-export function firmwareCurve(axis: Axis, tune: CanonicalTune, config?: CompiledConfig): (stick: number) => number {
-  const fit = config?.rateFit[axis];
-  if (fit) return (x) => evaluateRate(RATE_MODELS[fit.model], fit.raw, x);
-  return (x) => canonicalRate(tune.rates[axis], x);
-}
 
 export interface GainRow {
   axis: Axis;
@@ -67,8 +59,8 @@ export function HeatMeter({ risk }: { risk: HeatRisk }) {
 
 export function LivePreview({ tune, config, adapter }: { tune: CanonicalTune; config?: CompiledConfig; adapter: FirmwareAdapter }) {
   const series: CurveSeries[] = [
-    { label: 'Roll/Pitch', color: 'var(--curve-rp)', rate: firmwareCurve('roll', tune, config) },
-    { label: 'Yaw', color: 'var(--curve-yaw)', rate: firmwareCurve('yaw', tune, config) },
+    { label: 'Roll/Pitch', color: 'var(--curve-rp)', rate: flownRate('roll', tune, config) },
+    { label: 'Yaw', color: 'var(--curve-yaw)', rate: flownRate('yaw', tune, config) },
   ];
   const gains = writtenGains(tune, config);
   const roll = tune.rates.roll;

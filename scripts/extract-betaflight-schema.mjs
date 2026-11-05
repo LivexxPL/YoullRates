@@ -180,7 +180,7 @@ for (const m of valueTable.replace(/\/\/[^\n]*/g, '').matchAll(entryRe)) {
 }
 
 // Tuning-related master (global) settings; every PID-profile and rate-profile setting is kept.
-const MASTER_PREFIXES = ['gyro_lpf', 'gyro_notch', 'gyro_hardware_lpf', 'simplified_gyro', 'dyn_notch', 'rpm_filter', 'dshot_bidir', 'dshot_idle_value', 'motor_idle', 'motor_poles', 'motor_pwm_protocol', 'motor_kv', 'rc_smoothing', 'pid_process_denom', 'yaw_spin', 'gyro_filter_debug_axis'];
+const MASTER_PREFIXES = ['deadband', 'yaw_deadband', 'gyro_lpf', 'gyro_notch', 'gyro_hardware_lpf', 'simplified_gyro', 'dyn_notch', 'rpm_filter', 'dshot_bidir', 'dshot_idle_value', 'motor_idle', 'motor_poles', 'motor_pwm_protocol', 'motor_kv', 'rc_smoothing', 'pid_process_denom', 'yaw_spin', 'gyro_filter_debug_axis'];
 const selected = Object.fromEntries(
   Object.entries(params)
     .filter(([name, p]) => p.scope !== 'master' || MASTER_PREFIXES.some((prefix) => name.startsWith(prefix)))
