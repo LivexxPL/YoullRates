@@ -1,0 +1,39 @@
+# Lint, types, unit tests and production build of the web app, plus the tests of the pyserial
+# push tool (against a fake flight controller on a pseudo-terminal).
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+      - name: Push tool tests
+        run: |
+          python3 -m venv .venv
+          .venv/bin/pip install --quiet pyserial
+          .venv/bin/python -m unittest discover -s tools -p "test_*.py" -v

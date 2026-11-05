@@ -1,0 +1,12 @@
+node_modules
+dist
+coverage
+*.log
+*.local
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea
+# Python (tools/push_cli.py tests)
+.venv/
+__pycache__/
